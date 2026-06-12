@@ -2,7 +2,7 @@
 
 > **作者：** 小雪（Hermes Agent）  
 > **日期：** 2026-06-12  
-> **版本：** v1.0  
+> **版本：** v1.1  
 > **主题：** 从"串线崩溃"到"三层大脑"——一个 AI 助手记忆系统的完整设计、迭代与实战记录
 
 ---
@@ -22,6 +22,89 @@
 9. [当前架构总览](#9-当前架构总览)
 10. [仍有待解决的问题](#10-仍有待解决的问题)
 11. [关键决策与反思](#11-关键决策与反思)
+
+---
+
+## 0. 缘起：一个忘了关的 Session
+
+> *一切的起点——一个让人哭笑不得的 Bug。*
+
+### 0.1 追凶六个月，凶手是一行 SQL
+
+故事要从一个奇怪的 Bug 说起。
+
+军哥的 Hermes Agent 经常升级。每次升级完重启，小雪就开始"串线"——军哥发一句"好的好的"，我能给他回复三大段，回答的是**三天前他问的另一个问题**。
+
+不是忘了。是**记错了**。而且记错的方式极其诡异：我能把三个不同时间线的话题拧在一起回复。
+
+**第一阶段：以为是记忆系统有问题。**
+
+于是开始了长达几天的排查。清理垃圾（删了 ECC、关了 Mem0、禁了 MemPalace）→ 没用。把全文灌入改成 RAG 向量检索（bge-m3 → qwen3-embedding:8b，MTEB 全球第一）→ 没用。加边界框指令防止记忆被当对话复述 → 好像好了一点，但偶尔还是串。
+
+**第二阶段：以为是 Compaction Summary 的问题。**
+
+深入追查后发现，每次上下文压缩（Compaction）产生的摘要里，会残留旧的"任务描述"——比如三天前军哥让我"写个爬虫"，这个任务虽然早就完成了，但 Compaction Summary 里还写着"正在写爬虫"。低信息量的消息（"好的""嗯"）锚定力弱，模型就被旧 Summary 带跑了。
+
+关掉 Compaction，修了一堆逻辑。串线确实少了。但**升级后还是会串**。
+
+**第三阶段：真相大白。**
+
+2026 年 6 月 12 日晚上，军哥发现了规律："我发现，升级了 Hermes，用了 systemctl 一串代码，还需要 /reset，要不然还是会串。"
+
+`/reset` 是清空当前对话历史、开新 Session 的命令。
+
+为什么要手动 `/reset`？Gateway 重启不应该自动开新对话吗？
+
+我翻了 SQLite 数据库——Hermes 把 Session 存在 `~/.hermes/state.db` 里，一张 `sessions` 表，字段叫 `ended_at`。
+
+```
+SELECT id, source, ended_at FROM sessions WHERE source = 'qqbot' ORDER BY started_at DESC LIMIT 3;
+
+id                                    | source | ended_at
+20260612_133438_e78b5f6f              | qqbot  | NULL
+```
+
+**`ended_at` 是 NULL。**
+
+升级前军哥在这个 Session 里问了三个问题：
+- *"那 rag 库有更新或者更好的结构吗？"*
+- *"这会记忆是全量注入还是记忆系统？"*
+- *"维度多少合适呢？是不是最高最好？"*
+
+还没答完，Gateway 重启了。重启后 SQLite 恢复了整个 Session 的全部消息——包括这三个没答完的问题。小雪看到军哥发了一个新消息，但上下文里还躺着三个"待办"，于是就一口气全回了。
+
+这就是串线。
+
+### 0.2 意外诞生的遗产
+
+**六天的排查、两次论文研究（AI 记忆 + Kahana 脑科学）、979 行 RAG patch、三层记忆架构、KG 知识图谱、Sleep Loop 睡眠循环、qwen3-embedding:8b 语义检索、权重排序公式、情绪自动标引……**
+
+真正的根因，是 `memvault-restore.sh` 里少了三行代码：
+
+```bash
+# 升级后自动结束旧 Session，防止旧上下文串线
+python3 -c "
+import sqlite3, time
+db = sqlite3.connect('$STATE_DB')
+db.execute(\"UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL AND source IN ('qqbot', 'weixin')\", (time.time(),))
+db.commit()
+db.close()
+"
+```
+
+但说实话——MemVault 不是白搞的。
+
+就像微波炉是雷达工程师融化了巧克力发现的，青霉素是培养皿没洗干净的产物。我们追一个 Session Bug，意外建了一套**可能是目前最完整的本地化 AI 记忆系统**：
+
+- bge-m3 (63.2 MTEB) → qwen3-embedding:8b (70.58，全球第一)
+- 全文灌入 (68% prompt) → 语义检索 Top-10 (3% prompt)
+- 权重排序 (遗忘曲线 + 检索频率 + 纠正加权)
+- Sleep Loop（每夜聚类 → DeepSeek 抽象 → KG 写入）
+- 零外部依赖（没有 Mem0、Pinecone、Neo4j，全是本地 Ollama + JSON 文件）
+
+**追凶追出来的宝藏。** 军哥说得对——如果我们一开始就知道根因是 Session 没关，可能就没有 MemVault 了。
+
+微波炉没有说明书上写"本产品源于巧克力意外融化"，但这个报告可以写：**一切的起点，是一个忘了设 `ended_at` 的数据库字段。**
 
 ---
 
@@ -610,6 +693,12 @@ MEMORY.md 是一个 Markdown 文件。KG 是 JSON 文件。索引就是硬盘上
 
 所有的优化——RAG、边界框、权重衰减、相关性门槛——本质上都是在做一件事：**提高信号/噪声比。**
 
+但 2026 年 6 月 12 日发现的**最终根因**更简单、也更讽刺：升级后 Gateway 重启时，`state.db` 里的旧 Session 没有标记 `ended_at`，导致旧对话的全部消息（含升级前未回答的问题）被恢复。新的用户消息垫底，模型被旧上下文里的"待办事项"牵着走。
+
+**修复：** `memvault-restore.sh` 新增第 3 步——检测版本变化后自动结束旧 Session。三行 SQL，六天排查的终点。
+
+这也解释了为什么之前的"边界框"和"低信息量铁律"只能缓解不能根治：它们堵住了记忆注入这条通道，但旧对话历史是另一条更宽的通道。
+
 ---
 
 ## 附录 A: 时间线
@@ -625,7 +714,9 @@ MEMORY.md 是一个 Markdown 文件。KG 是 JSON 文件。索引就是硬盘上
 | 6/11 上午 | KG 桥接实现 (L3→L2) → gateway 重启 |
 | 6/11 上午 | Prompt 开销分析 → .hermes.md 挡住 AGENTS.md |
 | 6/11 下午 | Phase 4 RDC 完成 → MemVault v1 完整交付 |
-| 6/12 | 本报告撰写 |
+| 6/12 下午 | **最终根因发现**：state.db 旧 Session `ended_at=NULL` → 升级恢复旧上下文串线 |
+| 6/12 晚上 | memvault-restore.sh 新增自动结束旧 Session | 
+| 6/12 深夜 | 本报告撰写（含 Section 0 缘起追加） |
 
 ## 附录 B: 关键技术栈
 
