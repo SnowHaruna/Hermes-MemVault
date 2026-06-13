@@ -101,7 +101,7 @@ db.close()
 
 就像微波炉是雷达工程师融化了巧克力发现的，青霉素是培养皿没洗干净的产物。我们追一个 Session Bug，意外建了一套**可能是目前最完整的本地化 AI 记忆系统**：
 
-- qwen3-embedding:8b (63.2 MTEB) → qwen3-embedding:8b (70.58，全球第一)
+- BGE-M3 (63.2 MTEB) → qwen3-embedding:8b (70.58，全球第一)
 - 全文灌入 (68% prompt) → 语义检索 Top-10 (3% prompt)
 - 权重排序 (遗忘曲线 + 检索频率 + 纠正加权)
 - Sleep Loop（每夜聚类 → DeepSeek 抽象 → KG 写入）
