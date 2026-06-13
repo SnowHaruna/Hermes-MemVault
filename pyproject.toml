@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Hermes-MemVault"
+version = "1.2.0"
+description = "Hermes Agent 记忆子系统 — qwen3-embedding:8b + Ebbinghaus衰减 + Sleep Loop巩固 + KG桥接"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "SnowHaruna (榛名雪) & MemVault contributors"},
+]
+keywords = [
+    "memory", "ai", "llm", "cognitive-science", "ebbinghaus",
+    "rag", "retrieval", "forgetting-curve", "knowledge-graph",
+    "emotion-tagging", "qwen3-embedding", "sleep-loop",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/SnowHaruna/Hermes-MemVault"
+Repository = "https://github.com/SnowHaruna/Hermes-MemVault.git"
+Documentation = "https://github.com/SnowHaruna/Hermes-MemVault/blob/main/docs/memvault-experience-report-2026-06-12.md"
+Changelog = "https://github.com/SnowHaruna/Hermes-MemVault/blob/main/CHANGELOG.md"

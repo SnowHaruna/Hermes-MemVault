@@ -1,108 +1,134 @@
-# MemVault — 三层RAG记忆系统
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
+  <img src="https://img.shields.io/badge/python-3.10+-green" alt="Python">
+  <img src="https://img.shields.io/badge/版本-v1.2-brightgreen" alt="Version">
+  <img src="https://img.shields.io/badge/嵌入-qwen3--embedding:8b_MTEB_70.58-orange" alt="Embedding">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome">
+</p>
 
-> 基于 bge-m3 + LlamaIndex 的自建向量记忆。对标人脑海马体-新皮层互补学习系统。替代 Hermes 内置全文硬灌，支持无上限记忆条目。
-
-**作者**：小雪 & 榛名雪  
-**创建日期**：2026-06-10  
-**状态**：生产运行中  
-**GitHub**：SnowHaruna/memvault
+<h1 align="center">🧠 Hermes-MemVault</h1>
+<p align="center"><strong>Hermes Agent 定制版 AI 记忆系统 —— 以认知神经科学为理论底座</strong></p>
+<p align="center">
+  <em>它会遗忘。会在睡眠中巩固知识。会自己长出新规则。</em>
+</p>
 
 ---
 
-## 三层架构
+## 这是什么
 
-```
-L1 工作记忆  = context window（会话内，随对话消失）
-L2 情景记忆  = bge-m3 RAG（per-turn 动态检索，权重排序）
-L3 语义记忆  = Sleep Loop 自动巩固 → 知识图谱 nodes/edges
-```
+**Hermes-MemVault** 是 Hermes Agent 的记忆子系统。它不是另一个 RAG 框架——它是一个完整的三层记忆架构，从人脑的遗忘曲线到睡眠巩固，全部落地为工程代码。
 
-### L2 检索链路
+核心差异化：
+- 🧠 **脑科学对齐** —— 每个机制都有认知神经科学依据（Ebbinghaus / Kahana / Buzsáki）
+- 🔍 **语义检索** —— qwen3-embedding:8b（MTEB 70.58 全球第一）替代全文硬灌
+- 🌙 **Sleep Loop** —— 每夜自动聚类记忆、提炼抽象规则、写入知识图谱
+- 📉 **Token 省 66%** —— 从 35K/轮 降到 12K/轮
 
-```
-用户消息 → retrieve_for_query(query)
-  → Ollama 健康检测（2s timeout，挂了自动拉起）
-  → bge-m3 向量检索（top_k×2）
-  → 指数相似度衰减：exp(-TAU × (1-cos))
-  → 权重排序：decay + usage + correction + importance
-  → 相关性门槛：best_score ≥ 0.3（闲聊不灌记忆）
-  → 扩散抑制：4h 半衰期临时降权
-  → 死胡同回退：失败时用上次好 cue 重试
-  → ASCII 边界框 + "勿输出" 注入
-```
+---
 
-### L3 Sleep Loop（睡眠循环）
-
-```
-离线巩固流程：
-  bge-m3 嵌入 → 聚类（cos≥0.75）→ DeepSeek 提取抽象规则 → KG nodes/edges JSON
-
-触发方式：
-  - Cron 自动：0 3 * * *（每日凌晨）
-  - 手动：python3 ~/.hermes/scripts/sleep_loop.py
-```
-
-## 权重公式
-
-```
-final_weight = decay_factor × (1 + usage × 0.05 + correction × 0.3) × importance
-  decay_factor = 0.5^(days_elapsed / 7)      ← Ebbinghaus 遗忘曲线
-  importance   = {1.0, 1.2, 1.5}              ← 情绪关键词自动评分
-  范围限制     = [0.3, 3.0]                    ← 防遗忘/爆炸
-```
-
-## 关键常量（基于 Kahana 记忆文献）
-
-| 常量 | 值 | 来源 | 含义 |
-|------|---|------|------|
-| TAU | 3.0 | Kahana Ch3 | 指数衰减锐度 |
-| INHIBITION_HALF_LIFE | 4h | Kahana Ch4 | 扩散抑制恢复 |
-| CONTEXT_RHO | 0.8 | Kahana Ch7 | 上下文漂移保留 |
-| 相关性门槛 | 0.3 | 实战调优 | 闲聊不灌记忆 |
-| 权重衰减半衰期 | 7d | Ebbinghaus | 遗忘曲线 |
-| 权重底线/上限 | 0.3/3.0 | 实战调优 | 防遗忘/爆炸 |
-
-## 防御机制
-
-| 场景 | 机制 |
-|------|------|
-| Ollama 挂了 | urllib 2s 探活 → 自动拉起 → 本轮 skip |
-| 闲聊触发记忆 | 相关性门槛 0.3，低分跳过 |
-| 记忆串入回复 | ASCII 边界框 + "以上是记忆非对话" 关闭标记 |
-| 相似条目竞争 | 扩散抑制（4h 自动恢复）替代永久降权 |
-| 冷启动检索 | 死胡同回退到上次好 cue |
-| 升级丢改动 | rag-memory.patch 备份 → git apply 恢复 |
-
-## 关键文件
-
-| 文件 | 作用 |
-|------|------|
-| `~/.hermes/memories/MEMORY.md` | 所有记忆条目（§ 分隔，无上限） |
-| `~/.hermes/memory_index/` | bge-m3 向量索引（~700KB） |
-| `~/.hermes/memory_meta.json` | 权重元数据（atomic write） |
-| `~/.hermes/memories/knowledge_graph/` | L3 KG nodes/edges JSON |
-| `~/.hermes/hermes-agent/tools/memory_tool.py` | 核心：检索、权重、模式分离、KG、实时同步 |
-| `~/.hermes/scripts/sleep_loop.py` | L3 离线巩固脚本 |
-| `~/.hermes/rag-memory.patch` | 完整代码 patch 备份 |
-
-## 升级 Hermes 后恢复
+## 快速开始
 
 ```bash
-cd ~/.hermes/hermes-agent
-git apply ~/.hermes/rag-memory.patch
-systemctl --user restart hermes-gateway
-# ⚠️ 不能用 hermes gateway restart — 会触发 auto-update stash 本地改动
+# 安装 hermes-memv pip 包（独立使用）
+pip install hermes-memv
+
+# 或克隆 Hermes 集成版
+git clone https://github.com/SnowHaruna/Hermes-MemVault.git
 ```
+
+```python
+from hermes_memv import MemoryVault
+
+vault = MemoryVault()
+vault.remember("今天修复了一个并发 bug，根因是连接池未设置 max_overflow")
+results = vault.recall("bug")
+```
+
+> **详细文档：** [体验报告 v1.2](docs/memvault-experience-report-2026-06-12.md) — 738 行完整设计、迭代与实战记录
+
+---
+
+## 三层记忆架构
+
+```
+L0  工作记忆 (Working Memory)
+    ├── 脑区: 前额叶皮层 (PFC)
+    ├── 存储: Context window
+    └── TTL: 当前对话
+
+L1  情景记忆 (Episodic Memory)
+    ├── 脑区: 海马体 (Hippocampus)
+    ├── 存储: MEMORY.md + qwen3-embedding:8b 向量索引
+    ├── TTL: 永久（7 天权重半衰）
+    └── 内容: 具体事件、偏好、教训
+
+L2  语义记忆 (Semantic Memory)
+    ├── 脑区: 新皮层 (Neocortex)
+    ├── 存储: KG JSON（kg_nodes.json + kg_edges.json）
+    ├── TTL: 永久
+    └── 内容: 抽象规则、模式、规律
+```
+
+---
+
+## 核心机制
+
+| 机制 | 实现 | 脑科学来源 |
+|------|------|-----------|
+| **遗忘曲线** | `weight = e^(-days/7) + usage×0.05 + correction×0.3` | Ebbinghaus (1885) |
+| **Sleep Loop** | 每夜聚类 → DeepSeek 抽象 → KG 写入 | Buzsáki SWR (1989) |
+| **情绪标引** | 关键词自动评分重要性 | Amygdala |
+| **模式分离** | 相似条目检索降权 60% | DG 齿状回 |
+| **三路检索** | Dense + Sparse + ColBERT → RRF 融合 | — |
+| **对抗拒绝** | 无关查询返回空结果（「知不知」能力） | — |
+
+---
+
+## 技术栈
+
+| 组件 | 技术 |
+|------|------|
+| 嵌入模型 | qwen3-embedding:8b (Ollama / 2048维 / MTEB 70.58) |
+| 独立包存储 | SQLite + WAL + FTS5 + 连接池 |
+| 集成版存储 | MEMORY.md + LlamaIndex 向量索引 |
+| 知识图谱 | JSON 文件（kg_nodes.json + kg_edges.json） |
+| Sleep Loop | Cron job（每夜 2:00-3:00）+ DeepSeek v4-pro |
+| 依赖 | Ollama（嵌入）/ DeepSeek（抽象） / 零外部 SaaS |
+
+---
+
+## 与相关项目的关系
+
+| 项目 | 关系 |
+|------|------|
+| [memvault](https://github.com/SnowHaruna/memvault) | 上游独立 pip 包（原作者 @GwynCat），127 测试，SQLite+FTS5 |
+| [hermes-tentacles](https://github.com/SnowHaruna/hermes-tentacles) | 触手后台任务引擎，Sleep Loop 通过它触发 |
+| Hermes Agent | 宿主，MemVault 作为记忆子系统集成 |
+
+---
 
 ## 快速状态检查
 
 ```bash
-curl -s http://127.0.0.1:11434/api/tags | grep bge-m3    # RAG 在线？
-du -sh ~/.hermes/memory_index/                            # 索引大小
-grep -c "§" ~/.hermes/memories/MEMORY.md                  # 记忆条数
+# 嵌入模型在线？
+curl -s http://127.0.0.1:11434/api/tags | grep qwen3-embedding
+
+# 索引大小 & 记忆条数
+du -sh ~/.hermes/memory_index/
+grep -c "§" ~/.hermes/memories/MEMORY.md
+
+# 权重统计
 python3 -c "import json; d=json.load(open('$HOME/.hermes/memory_meta.json')); print(len(d),'entries')"
 ```
 
-## License
+---
 
-MIT
+## 许可证
+
+MIT — 详见 [LICENSE](LICENSE)。
+
+---
+
+<p align="center">
+  <em>「知道什么该忘，比知道什么该存更难。」</em>
+</p>
