@@ -44,7 +44,7 @@ vault.remember("今天修复了一个并发 bug，根因是连接池未设置 ma
 results = vault.recall("bug")
 ```
 
-> **详细文档：** [体验报告 v1.2](docs/memvault-experience-report-2026-06-12.md) — 738 行完整设计、迭代与实战记录
+> **详细文档：** [体验报告 v1.2](docs/memvault-experience-report-2026-06-13.md) — 738 行完整设计、迭代与实战记录
 
 ---
 

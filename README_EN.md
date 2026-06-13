@@ -44,7 +44,7 @@ vault.remember("Fixed a concurrency bug today — root cause was the connection 
 results = vault.recall("bug")
 ```
 
-> **Detailed docs:** [Experience Report v1.2](docs/memvault-experience-report-2026-06-12.md) — 738 lines of design rationale, iteration history, and real-world deployment notes
+> **Detailed docs:** [Experience Report v1.2](docs/memvault-experience-report-2026-06-13.md) — 738 lines of design rationale, iteration history, and real-world deployment notes
 
 ---
 
