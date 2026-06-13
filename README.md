@@ -101,7 +101,7 @@ L2  语义记忆 (Semantic Memory)
 
 | 项目 | 关系 |
 |------|------|
-| [memvault](https://github.com/SnowHaruna/memvault) | 上游独立 pip 包（原作者 @GwynCat），127 测试，SQLite+FTS5 |
+| [memvault](https://github.com/SnowHaruna/memvault) | 独立 pip 包（感谢 @GwynCat），127 测试，SQLite+FTS5 |
 | [hermes-tentacles](https://github.com/SnowHaruna/hermes-tentacles) | 触手后台任务引擎，Sleep Loop 通过它触发 |
 | Hermes Agent | 宿主，MemVault 作为记忆子系统集成 |
 
