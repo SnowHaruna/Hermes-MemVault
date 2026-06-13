@@ -535,7 +535,7 @@ class MemoryStore:
         try:
             OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
             Settings.embed_model = OllamaEmbedding(
-                model_name="bge-m3",
+                model_name="qwen3-embedding:8b",
                 base_url=OLLAMA_HOST,
                 embed_batch_size=16,
             )
@@ -755,7 +755,7 @@ class MemoryStore:
         try:
             OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
             Settings.embed_model = OllamaEmbedding(
-                model_name="bge-m3",
+                model_name="qwen3-embedding:8b",
                 base_url=OLLAMA_HOST,
                 embed_batch_size=16,
             )
@@ -818,7 +818,7 @@ class MemoryStore:
             header = f"MEMORY (vector-retrieved) [{pct}% — {current:,}/{limit:,} chars]"
             separator = "═" * 46
             note = (
-                "Top {k} memories retrieved via bge-m3 semantic search. "
+                "Top {k} memories retrieved via qwen3-embedding:8b semantic search. "
                 "Full memory store available via memory(action=read)."
             ).format(k=len(nodes))
 
