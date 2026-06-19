@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Hermes-MemVault"
-version = "1.2.0"
+version = "1.0.0"
 description = "Hermes Agent 记忆子系统 — qwen3-embedding:8b + Ebbinghaus衰减 + Sleep Loop巩固 + KG桥接"
 readme = "README.md"
 license = {text = "MIT"}
@@ -24,6 +24,28 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.10"
+
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+rag = [
+    "llama-index-core>=0.10.0",
+    "llama-index-embeddings-ollama>=0.1.0",
+]
+llm = [
+    "openai>=1.0.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+all = [
+    "Hermes-MemVault[rag,llm,dev]",
 ]
 
 [project.urls]
@@ -31,3 +53,9 @@ Homepage = "https://github.com/SnowHaruna/Hermes-MemVault"
 Repository = "https://github.com/SnowHaruna/Hermes-MemVault.git"
 Documentation = "https://github.com/SnowHaruna/Hermes-MemVault/blob/main/docs/memvault-experience-report-2026-06-12.md"
 Changelog = "https://github.com/SnowHaruna/Hermes-MemVault/blob/main/CHANGELOG.md"
+
+[project.scripts]
+hermes-memv = "hermes_memv.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["hermes_memv*"]

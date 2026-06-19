@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.3 (2026-06-19)
+
+### 新增
+- 首次推送 Python 源代码：三层记忆架构完整实现（28 个源文件，~200KB）
+  - `hermes_memv/core/`: 引擎、巩固、衰减、压缩、格式化
+  - `hermes_memv/storage/`: SQLite/文件/内存三种后端
+  - `hermes_memv/retrieval/`: 三路混合检索（稠密+稀疏+ColBERT）
+  - `hermes_memv/embedding/`: 嵌入模型抽象层
+  - `hermes_memv/llm/`: 统一 LLM 客户端
+- CLI 命令 `hermes-memv` 支持
+- pyproject.toml 合并 GitHub 版与本地版（保留 scripts + packages.find）
+
 ## v1.2 (2026-06-13)
 
 ### 新增
