@@ -1,8 +1,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
   <img src="https://img.shields.io/badge/python-3.10+-green" alt="Python">
-  <img src="https://img.shields.io/badge/版本-v1.2-brightgreen" alt="Version">
-  <img src="https://img.shields.io/badge/嵌入-qwen3--embedding:8b_MTEB_70.58-orange" alt="Embedding">
+  <img src="https://img.shields.io/badge/版本-v1.0.1-brightgreen" alt="Version">
+  <img src="https://img.shields.io/badge/嵌入-bge--m3_MTEB_63.2-blue" alt="Embedding">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome">
 </p>
 
@@ -20,7 +20,7 @@
 
 核心差异化：
 - 🧠 **脑科学对齐** —— 每个机制都有认知神经科学依据（Ebbinghaus / Kahana / Buzsáki）
-- 🔍 **语义检索** —— qwen3-embedding:8b（MTEB 70.58 全球第一）替代全文硬灌
+- 🔍 **语义检索** —— bge-m3（Ollama / 1024维 / MTEB 63.2）替代全文硬灌
 - 🌙 **Sleep Loop** —— 每夜自动聚类记忆、提炼抽象规则、写入知识图谱
 - 📉 **Token 省 66%** —— 从 35K/轮 降到 12K/轮
 
@@ -58,7 +58,7 @@ L0  工作记忆 (Working Memory)
 
 L1  情景记忆 (Episodic Memory)
     ├── 脑区: 海马体 (Hippocampus)
-    ├── 存储: MEMORY.md + qwen3-embedding:8b 向量索引
+    ├── 存储: MEMORY.md + bge-m3 向量索引
     ├── TTL: 永久（7 天权重半衰）
     └── 内容: 具体事件、偏好、教训
 
@@ -88,7 +88,7 @@ L2  语义记忆 (Semantic Memory)
 
 | 组件 | 技术 |
 |------|------|
-| 嵌入模型 | qwen3-embedding:8b (Ollama / 2048维 / MTEB 70.58) |
+| 嵌入模型 | bge-m3 (Ollama / 1024维 / MTEB 63.2) |
 | 独立包存储 | SQLite + WAL + FTS5 + 连接池 |
 | 集成版存储 | MEMORY.md + LlamaIndex 向量索引 |
 | 知识图谱 | JSON 文件（kg_nodes.json + kg_edges.json） |
@@ -111,7 +111,7 @@ L2  语义记忆 (Semantic Memory)
 
 ```bash
 # 嵌入模型在线？
-curl -s http://127.0.0.1:11434/api/tags | grep qwen3-embedding
+curl -s http://127.0.0.1:11434/api/tags | grep bge-m3
 
 # 索引大小 & 记忆条数
 du -sh ~/.hermes/memory_index/

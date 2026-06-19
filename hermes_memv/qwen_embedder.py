@@ -1,5 +1,6 @@
 """
 qwen3-embedding:8b 适配器 — 实现 AbstractEmbedder 接口。
+注意：当前默认嵌入模型为 bge-m3（通过 embedding/ollama.py），qwen3 为可选项。
 
 MTEB 70.58 (全球第一, 2026-06), 2048维, 32K上下文。
 通过 Ollama 调用，代理已配（7890）。

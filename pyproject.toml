@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Hermes-MemVault"
-version = "1.0.0"
-description = "Hermes Agent 记忆子系统 — qwen3-embedding:8b + Ebbinghaus衰减 + Sleep Loop巩固 + KG桥接"
+version = "1.0.1"
+description = "Hermes Agent 记忆子系统 — bge-m3 + Ebbinghaus衰减 + Sleep Loop巩固 + KG桥接"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [

@@ -2,7 +2,7 @@
 Hermes-MemVault — Hermes 定制版 AI 记忆系统
 
 融合 memvault v0.1 (SnowHaruna) + Hermes 增强:
-  - 嵌入: qwen3-embedding:8b (MTEB 70.58 全球第一)
+  - 嵌入: bge-m3 (Ollama / 1024维 / MTEB 63.2)
   - 存储: SQLite + WAL + FTS5 + 连接池
   - 检索: Dense + Sparse + ColBERT 三路混合
   - 特色: 情绪标引 + KG桥接 + 对抗拒绝 + 首因近因压缩
@@ -30,7 +30,7 @@ from hermes_memv.core.formatter import format_system_prompt_block
 from hermes_memv.embedding.base import AbstractEmbedder
 from hermes_memv.embedding.ollama import OllamaEmbedder  # kept for compat
 from hermes_memv.embedding.mock import MockEmbedder, TopicMockEmbedder
-from hermes_memv.qwen_embedder import QwenEmbedder  # Hermes-MemVault: qwen3-embedding:8b
+from hermes_memv.qwen_embedder import QwenEmbedder  # Hermes-MemVault: bge-m3 (primary) / qwen3 (optional)
 from hermes_memv.emotion import score_emotion, emotion_to_importance
 from hermes_memv.kg_bridge import KGBridge
 from hermes_memv.llm.client import LLMClient
@@ -75,7 +75,7 @@ __all__ = [
     "MemoryStorage",
     # ── 嵌入后端 ──
     "AbstractEmbedder",
-    "QwenEmbedder",       # Hermes-MemVault: qwen3-embedding:8b
+    "QwenEmbedder",       # Hermes-MemVault: bge-m3默认, qwen3可选
     "OllamaEmbedder",      # 保留兼容
     "MockEmbedder",
     "TopicMockEmbedder",
@@ -428,7 +428,8 @@ class MemoryVault:
         cfg = self.config.embedding
         if cfg.provider == "mock":
             return MockEmbedder()
-        # Hermes-MemVault: default to qwen3-embedding:8b (MTEB 70.58)
+        # Hermes-MemVault: default embedder for standalone is qwen3-embedding
+        # Hermes-integrated version typically uses bge-m3 via embedding/ollama.py
         return QwenEmbedder(model=cfg.model if cfg.model != "bge-m3" else "qwen3-embedding:8b")
 
     def _create_default_llm(self) -> LLMClient:

@@ -1,8 +1,8 @@
 """
 KG（知识图谱）桥接模块 — 从 L1 情景记忆抽象 L2 语义规则。
 
-与 Hermes KG 系统双向桥接：
-  1. Sleep Loop 产出规则 → 写入 Hermes KG
+与 KG 系统双向桥接：
+  1. Sleep Loop 产出规则 → 写入 KG
   2. 检索时附带 KG 规则 → 增强上下文理解
 """
 
@@ -14,8 +14,9 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# KG 存储路径（与 Hermes 共享）
-KG_INDEX_PATH = os.path.expanduser("~/.hermes/memory_index/graph_store.json")
+# 默认 KG 存储路径（可通过配置覆盖）
+DEFAULT_KG_PATH = os.path.expanduser("~/.hermes/memory_index/graph_store.json")
+# 独立使用时可设为 ./kg_graph.json
 
 
 @dataclass
@@ -37,7 +38,7 @@ class KGBridge:
         # -> [KGRule(...)]
     """
 
-    def __init__(self, path: str = KG_INDEX_PATH):
+    def __init__(self, path: str = DEFAULT_KG_PATH):
         self._path = path
         self._rules: Dict[str, KGRule] = {}
         self._load()
